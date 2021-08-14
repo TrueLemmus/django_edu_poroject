@@ -4,7 +4,7 @@ import json
 
 
 def json_import(path_to_file):
-    with open(path_to_file, 'r') as json_data:
+    with open(path_to_file, 'r', encoding='utf-8') as json_data:
         return json.load(json_data)
 
 
