@@ -14,12 +14,13 @@ def basket_add(request, product_id):
 
     if not baskets.exists():
         Basket.objects.create(user=request.user, product=product, quantity=1)
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        result = 'Товар успешно добавлен в корзину'
     else:
         basket = baskets.first()
         basket.quantity += 1
         basket.save()
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        result = 'Количество товаров в корзине увеличено'
+    return JsonResponse({'result': result})
 
 
 @login_required
