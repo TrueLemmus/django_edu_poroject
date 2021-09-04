@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import datetime
 from .models import ProductCategory, Product
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 
 def index(request):
@@ -10,11 +11,14 @@ def index(request):
     return render(request, 'products/index.html', context)
 
 
-def products(request):
+def products(request, category_id=None):
     context = {
         'date': datetime.datetime.now(),
         'title': 'GeekShop - Каталог',
-        'products': Product.objects.all(),
-        'product_categorys': ProductCategory.objects.all()
+        'product_categories': ProductCategory.objects.all()
     }
+
+    prods = Product.objects.filter(category_id=category_id) if category_id else Product.objects.all()
+    context['products'] = prods
+
     return render(request, 'products/products.html', context)

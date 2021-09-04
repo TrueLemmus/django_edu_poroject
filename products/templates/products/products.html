@@ -21,9 +21,9 @@
 
                 <h1 class="my-4">GeekShop</h1>
                 <div class="list-group">
-                    {% if product_categorys %}
-                        {% for category in product_categorys%}
-                            <a href="#" class="list-group-item" alt="{{ category.description }}">{{ category.name }}</a>
+                    {% if product_categories %}
+                        {% for category in product_categories %}
+                            <a href="{% url 'products:category' category.id %}" class="list-group-item" title="{{ category.description }}">{{ category.name }}</a>
                         {% endfor %}
                     {% else %}
                         <a href="#" class="list-group-item">Нет категорий :(</a>
