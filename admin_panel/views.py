@@ -1,59 +1,72 @@
 from users.models import User
 from admin_panel.forms import UserAdminRegistrationForm, UserAdminProfileForm
-from django.contrib.auth.decorators import user_passes_test
 from django.shortcuts import render, HttpResponseRedirect
-from django.urls import reverse
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, UpdateView, DeleteView, View, ListView
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 
 
-@user_passes_test(lambda u: u.is_staff)
-def index(request):
-    context = {'title': 'GeekShop - Admin'}
-    return render(request, 'admin_panel/index.html', context)
+class MainView(LoginRequiredMixin, PermissionRequiredMixin, View):
+    permission_required = 'is_staff'
+
+    def get(self, request, *args, **kwargs):
+        context = {'title': 'GeekShop - Admin'}
+        return render(request, 'admin_panel/index.html', context)
 
 
 # Read
-@user_passes_test(lambda u: u.is_staff)
-def admin_users(request):
-    context = {'title': 'GeekShop - Пользователи', 'users': User.objects.all()}
-    return render(request, 'admin_panel/admin-users.html', context)
+class UserListView(LoginRequiredMixin, PermissionRequiredMixin, ListView):
+    model = User
+    template_name = 'admin_panel/admin-users.html'
+    permission_required = 'is_staff'
+
+    def get_context_data(self, **kwargs):
+        context = super(UserListView, self).get_context_data(**kwargs)
+        context['title'] = 'GeekShop - Админ | Пользователи'
+        return context
 
 
 # Create
-@user_passes_test(lambda u: u.is_staff)
-def admin_users_create(request):
-    if request.method == 'POST':
-        form = UserAdminRegistrationForm(data=request.POST, files=request.FILES)
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('admins:admin_users'))
-    else:
-        form = UserAdminRegistrationForm()
-    context = {'title': 'GeekShop - Создание пользователя', 'form': form}
-    return render(request, 'admin_panel/admin-users-create.html', context)
+class UserCreateView(LoginRequiredMixin, PermissionRequiredMixin, CreateView):
+    model = User
+    template_name = 'admin_panel/admin-users-create.html'
+    form_class = UserAdminRegistrationForm
+    success_url = reverse_lazy('admin_panel:admin_users')
+    permission_required = 'is_staff'
+
+    def get_context_data(self, **kwargs):
+        context = super(UserCreateView, self).get_context_data(**kwargs)
+        context['title'] = 'GeekShop - Админ | Создать'
+        return context
 
 
 # Update
-@user_passes_test(lambda u: u.is_staff)
-def admin_users_update(request, id):
-    selected_user = User.objects.get(id=id)
-    if request.method == 'POST':
-        form = UserAdminProfileForm(instance=selected_user, files=request.FILES, data=request.POST)
-        if form.is_valid():
-            form.save()
-            return HttpResponseRedirect(reverse('admin_panel:admin_users'))
-    else:
-        form = UserAdminProfileForm(instance=selected_user)
-    context = {
-        'title': 'GeekShop - Редактирование пользователя',
-        'selected_user': selected_user,
-        'form': form,
-    }
-    return render(request, 'admin_panel/admin-users-update-delete.html', context)
+class UserUpdateView(LoginRequiredMixin, PermissionRequiredMixin, UpdateView):
+    model = User
+    template_name = 'admin_panel/admin-users-update-delete.html'
+    form_class = UserAdminProfileForm
+    success_url = reverse_lazy('admin_panel:admin_users')
+    permission_required = 'is_staff'
+
+    def get_context_data(self, **kwargs):
+        context = super(UserUpdateView, self).get_context_data(**kwargs)
+        context['title'] = 'GeekShop - Админ | Редактировать'
+        return context
 
 
 # Delete
-@user_passes_test(lambda u: u.is_staff)
-def admin_users_delete(request, id):
-    user = User.objects.get(id=id)
-    user.safe_delete()
-    return HttpResponseRedirect(reverse('admin_panel:admin_users'))
+class UserDeleteView(LoginRequiredMixin, PermissionRequiredMixin, DeleteView):
+    model = User
+    template_name = 'admin_panel/admin-users-update-delete.html'
+    success_url = reverse_lazy('admin_panel:admin_users')
+    permission_required = 'is_staff'
+
+    def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.safe_delete()
+        return HttpResponseRedirect(self.get_success_url())
+
+    def get_context_data(self, **kwargs):
+        context = super(UserDeleteView, self).get_context_data(**kwargs)
+        context['title'] = 'GeekShop - Админ | Удалить'
+        return context
