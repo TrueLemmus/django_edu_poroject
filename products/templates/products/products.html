@@ -21,9 +21,9 @@
 
                 <h1 class="my-4">GeekShop</h1>
                 <div class="list-group">
-                    {% if product_categorys %}
-                        {% for category in product_categorys%}
-                            <a href="#" class="list-group-item" alt="{{ category.description }}">{{ category.name }}</a>
+                    {% if product_categories %}
+                        {% for category in product_categories %}
+                            <a href="{% url 'products:category' category.id %}" class="list-group-item" title="{{ category.description }}">{{ category.name }}</a>
                         {% endfor %}
                     {% else %}
                         <a href="#" class="list-group-item">Нет категорий :(</a>
@@ -94,14 +94,25 @@
 
                 <nav aria-label="Page navigation example">
                     <ul class="pagination justify-content-center">
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                        <li class="page-item {% if not products.has_previous %} disabled {% endif %}">
+                            <a class="page-link"
+                               href="{% if products.has_previous %} {% url 'products:page' products.previous_page_number %} {% else %} # {% endif %}"
+                               tabindex="-1" aria-disabled="true">
+                                Предыдущая
+                            </a>
                         </li>
-                        <li class="page-item"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="#">Next</a>
+                        {% for page in products.paginator.page_range %}
+                            <li class="page-item">
+                                <a class="page-link" href="{% url 'products:page' page %}">
+                                    {{ page }}
+                                </a>
+                            </li>
+                        {% endfor %}
+                        <li class="page-item {% if not products.has_next %} disabled {% endif %}">
+                            <a class="page-link"
+                               href="{% if products.has_next %} {% url 'products:page' products.next_page_number %} {% else %} # {% endif %}">
+                                Следующая
+                            </a>
                         </li>
                     </ul>
                 </nav>
