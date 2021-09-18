@@ -1,0 +1,4 @@
+django-environ
+social_auth_app_django
+Django
+requests

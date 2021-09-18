@@ -1,10 +1,11 @@
+from django.db import transaction
 from django.shortcuts import render, HttpResponseRedirect
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib import auth, messages
 from django.urls import reverse
-from users.forms import UserLoginForm, UserRegistrationForm, UserProfileForm
-from baskets.models import Basket
+from users.forms import UserLoginForm, UserRegistrationForm, UserProfileForm, UserProfileEditForm
+# from baskets.models import Basket
 from django.contrib.auth.decorators import login_required
 from users.models import User
 
@@ -26,7 +27,7 @@ def verify(request, email, activation_key):
         if user.activation_key == activation_key and not user.is_activation_key_expired():
             user.is_active = True
             user.save()
-            auth.login(request, user)
+            auth.login(request, user, backend='django.contrib.auth.backends.ModelBackend')
             print(f'User {user} activated')
             return HttpResponseRedirect(reverse('index'))
         else:
@@ -76,18 +77,22 @@ def registration(request):
 
 
 @login_required
+@transaction.atomic
 def profile(request):
     user = request.user
     if request.method == 'POST':
         form = UserProfileForm(instance=user, files=request.FILES, data=request.POST)
-        if form.is_valid():
+        profile_form = UserProfileEditForm(data=request.POST, instance=request.user.userprofile)
+        if form.is_valid() and profile_form.is_valid():
             form.save()
             return HttpResponseRedirect(reverse('users:profile'))
     else:
         form = UserProfileForm(instance=user)
+        profile_form = UserProfileEditForm(instance=request.user.userprofile)
     context = {
         'title': 'GeekShop - Личный кабинет',
         'form': form,
+        'profile_form': profile_form,
         # 'baskets': Basket.objects.filter(user=user),
     }
     return render(request, 'users/profile.html', context)
