@@ -5,6 +5,7 @@ from baskets.models import Basket
 from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
 from django.http import JsonResponse
+from django.db.models import F, Q
 
 
 @login_required
@@ -17,7 +18,7 @@ def basket_add(request, product_id):
         result = 'Товар успешно добавлен в корзину'
     else:
         basket = baskets.first()
-        basket.quantity += 1
+        basket.quantity = F('quantity') + 1
         basket.save()
         result = 'Количество товаров в корзине увеличено'
     return JsonResponse({'result': result})
